@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kouta3324/auto-edge"
+    "url": "https://github.com/kouta3324/auto-edge.git"
   },
   "author": "Kota Nakanishi",
   "license": "MIT",
