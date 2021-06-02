@@ -2,6 +2,7 @@
 /lib/*
 /log/*
 /data/*
+/dist/*
 /msedgedriver.exe
 /node.exe
 !.gitkeep
