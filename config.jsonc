@@ -8,7 +8,7 @@
         ],
         "waitMSecAfterTransaction": 5000
     },
-    "site": {
+    "siteInfo": {
         "urlFilePath": "./data/url-info.jsonc",
         "loginFilePath": "./data/login.jsonc"
     },
