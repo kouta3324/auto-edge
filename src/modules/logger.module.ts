@@ -24,7 +24,7 @@ export class Logger {
     }
 
     /** エラーログ出力 */
-    public static async error(error: Error, message: unknown): Promise<void> {
+    public static async error(message: unknown, error?: Error): Promise<void> {
         const logger = Log4js.getLogger('error')
         logger.error((typeof message === 'string') ? message : JSON.stringify(message))
         logger.error(JSON.stringify(error))

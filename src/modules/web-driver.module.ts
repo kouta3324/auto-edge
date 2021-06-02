@@ -14,8 +14,8 @@ export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDrive
         .build()
         .catch((e: Error) => {
             const errMsg = 'ブラウザの起動に失敗しました。'
-            Logger.error(e, errMsg)
-            Logger.debug(capabilities)
+            Logger.error(errMsg, e)
+            Logger.error(capabilities)
             notifyError(errMsg)
             throw new Error(errMsg)
         })
@@ -28,8 +28,8 @@ export const login = (async (driver: WebDriver, loginUrl: string, loginTransacti
     await driver.get(loginUrl)
         .catch((e: Error) => {
             const errMsg = 'ログインページへのアクセスに失敗しました。'
-            Logger.error(e, errMsg)
-            Logger.debug(loginUrl)
+            Logger.error(errMsg, e)
+            Logger.error(loginUrl)
             notifyError(errMsg)
             throw new Error(errMsg)
         })
@@ -46,8 +46,8 @@ export const runTransaction = (async (driver: WebDriver, startUrl: string, trans
     await driver.get(startUrl)
         .catch((e: Error) => {
             const errMsg = 'スタートページへのアクセスに失敗しました。'
-            Logger.error(e, errMsg)
-            Logger.debug(startUrl)
+            Logger.error(errMsg, e)
+            Logger.error(startUrl)
             notifyError(errMsg)
             throw new Error(errMsg)
         })
@@ -65,8 +65,8 @@ const doOperation = (async (driver: WebDriver, operation: Operation) => {
             .click()
             .catch((e: Error) => {
                 const errMsg = '項目「' + operation.name + '」のクリックに失敗しました。'
-                Logger.error(e, errMsg)
-                Logger.debug(operation)
+                Logger.error(errMsg, e)
+                Logger.error(operation)
                 notifyError(errMsg)
                 throw new Error(errMsg)
             })
@@ -78,8 +78,8 @@ const doOperation = (async (driver: WebDriver, operation: Operation) => {
             .sendKeys(operation.value)
             .catch((e: Error) => {
                 const errMsg = '項目「' + operation.name + '」の入力に失敗しました。'
-                Logger.error(e, errMsg)
-                Logger.debug(operation)
+                Logger.error(errMsg, e)
+                Logger.error(operation)
                 notifyError(errMsg)
                 throw new Error(errMsg)
             })
