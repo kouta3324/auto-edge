@@ -17,8 +17,6 @@ import { getEdgeWebDriver, login, runTransaction } from './modules/web-driver.mo
     const urlInfo: UrlInfo = parse(readFileSync(config.siteInfo.urlFilePath).toString())
     const loginTransaction: Operation[] = parse(readFileSync(config.siteInfo.loginFilePath).toString())
 
-    Logger.info(loginTransaction)
-
     // データシートロード
     const sheet = getDataSheet(config.data.filePath, config.data.sheetName)
     const data = getTransactionData(config.data.label, sheet)
@@ -28,13 +26,14 @@ import { getEdgeWebDriver, login, runTransaction } from './modules/web-driver.mo
 
     try {
         // ログイン処理
-        await login(driver, urlInfo.loginUrl, loginTransaction)
+        Logger.info(loginTransaction)
+        await login(driver, urlInfo.loginUrl, loginTransaction, config.webDriver.waitMSecAfterTransaction)
         await sleep(config.webDriver.waitMSecAfterTransaction)
 
         // 取引処理
         Logger.info(data)
         for (const transaction of data) {
-            await runTransaction(driver, urlInfo.startUrl, transaction)
+            await runTransaction(driver, urlInfo.startUrl, transaction, config.webDriver.waitMSecAfterTransaction)
             await sleep(config.webDriver.waitMSecAfterTransaction)
         }
     } finally {

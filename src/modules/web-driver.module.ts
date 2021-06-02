@@ -1,6 +1,6 @@
 import { WebDriver, Builder, By, Capabilities, until } from 'selenium-webdriver'
 import { Logger } from './logger.module'
-import { notifyError } from './util.module'
+import { notifyError, sleep } from './util.module'
 
 /** Microsoft Edge の WebDriver を取得 */
 export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDriver> => {
@@ -22,7 +22,7 @@ export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDrive
 })
 
 /** ログイン処理 (初回のみ処理) */
-export const login = (async (driver: WebDriver, loginUrl: string, loginTransaction: Operation[])
+export const login = (async (driver: WebDriver, loginUrl: string, loginTransaction: Operation[], waitMSec: number)
     : Promise<void> => {
     // ログインURLを開く
     await driver.get(loginUrl)
@@ -33,6 +33,7 @@ export const login = (async (driver: WebDriver, loginUrl: string, loginTransacti
             notifyError(errMsg)
             throw new Error(errMsg)
         })
+    await sleep(waitMSec)
     // ログイン処理データにしたがってオペレーションする
     for (const operation of loginTransaction) {
         await doOperation(driver, operation)
@@ -40,7 +41,7 @@ export const login = (async (driver: WebDriver, loginUrl: string, loginTransacti
 })
 
 /** 取引処理 */
-export const runTransaction = (async (driver: WebDriver, startUrl: string, transaction: Operation[])
+export const runTransaction = (async (driver: WebDriver, startUrl: string, transaction: Operation[], waitMSec: number)
     : Promise<void> => {
     // スタートURLを開く
     await driver.get(startUrl)
@@ -51,6 +52,7 @@ export const runTransaction = (async (driver: WebDriver, startUrl: string, trans
             notifyError(errMsg)
             throw new Error(errMsg)
         })
+    await sleep(waitMSec)
     // 取引処理データにしたがってオペレーション
     for (const operation of transaction) {
         await doOperation(driver, operation)
