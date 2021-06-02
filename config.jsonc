@@ -1,0 +1,27 @@
+{
+    "webDriver": {
+        "edgeOptions": [
+            // "--headless",
+            // "--disable-gpu",
+            "--window-size=1280,1024",
+            "--inprivate"
+        ],
+        "waitMSecAfterTransaction": 5000
+    },
+    "site": {
+        "urlFilePath": "./data/url-info.jsonc",
+        "loginFilePath": "./data/login.jsonc"
+    },
+    "data": {
+        "filePath": "./data/data.xlsx",
+        "sheetName": "DataSheet",
+        "label": {
+            "name": "項目名",
+            "control": "操作",
+            "cssSelector": "CSSセレクタ",
+            "style": "形式",
+            "timeout": "タイムアウト(mSec)",
+            "data": "データ"
+        }
+    }
+}
