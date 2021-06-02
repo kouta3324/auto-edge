@@ -4,9 +4,9 @@ import { join } from 'path'
 /** アプリ名 (通知用) */
 const APP_NAME = 'AutoEdge'
 /** 完了通知アイコン */
-const COMPLETE_ICON = '../../img/auto-edge_blue.png'
+const COMPLETE_ICON = '../../assets/image/auto-edge_blue.png'
 /** エラー通知アイコン */
-const ERROR_ICON = '../../img/auto-edge_yellow.png'
+const ERROR_ICON = '../../assets/image/auto-edge_yellow.png'
 
 /**
  * 指定された秒数処理を停止する
