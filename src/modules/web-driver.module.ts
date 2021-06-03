@@ -7,9 +7,6 @@ export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDrive
         .set('ms:edgeOptions', {
             args: edgeOptions
         })
-        .setLoggingPrefs({
-            browser: 'OFF'
-        })
     // ブラウザを起動
     return await new Builder()
         .withCapabilities(capabilities)
