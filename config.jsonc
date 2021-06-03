@@ -6,7 +6,13 @@
             "--window-size=1280,1024",
             "--inprivate"
         ],
-        "waitMSecAfterTransaction": 5000
+        "timeoutMSec": 15000,
+        "intervalMSec": {
+            "afterLogin": 2000,
+            "afterTransaction": 2000,
+            "afterOperation": 100,
+            "afterQuit": 3000
+        }
     },
     "siteInfo": {
         "urlFilePath": "./data/url-info.jsonc",
@@ -19,8 +25,8 @@
             "name": "項目名",
             "control": "操作",
             "cssSelector": "CSSセレクタ",
+            "waitAfter": "入力後待機",
             "style": "形式",
-            "timeout": "タイムアウト(mSec)",
             "data": "データ"
         }
     }

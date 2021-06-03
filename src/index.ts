@@ -1,47 +1,84 @@
 import { parse } from 'jsonc-parser'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { WebDriver } from 'selenium-webdriver'
 
 import { Logger } from './modules/logger.module'
-import { notifyComplete, sleep } from './modules/util.module'
+import { notifyComplete, notifyError, sleep } from './modules/util.module'
 import { getTransactionData, getDataSheet } from './modules/excel-to-json.module'
 import { getEdgeWebDriver, login, runTransaction } from './modules/web-driver.module'
 
-(async () => {
+const main = (async () => {
 
-    // ロガー初期化
-    Logger.init()
-
-    // 定義ロード
+    // 基本定義ロード
     const config: Config = parse(readFileSync('./config.jsonc').toString())
+
+    // ファイルチェック
+    checkFiles(config)
+
+    // 各種定義ロード
     const urlInfo: UrlInfo = parse(readFileSync(config.siteInfo.urlFilePath).toString())
     const loginTransaction: Operation[] = parse(readFileSync(config.siteInfo.loginFilePath).toString())
 
     // データシートロード
     const sheet = getDataSheet(config.data.filePath, config.data.sheetName)
-    const data = getTransactionData(config.data.label, sheet)
+    const data = getTransactionData(config, sheet)
 
     // ブラウザ起動
     const driver: WebDriver = await getEdgeWebDriver(config.webDriver.edgeOptions)
 
-    try {
-        // ログイン処理
-        Logger.info(loginTransaction)
-        await login(driver, urlInfo.loginUrl, loginTransaction, config.webDriver.waitMSecAfterTransaction)
-        await sleep(config.webDriver.waitMSecAfterTransaction)
+    // ログイン処理
+    Logger.info(loginTransaction)
+    await login(driver, urlInfo.loginUrl, loginTransaction, config.webDriver.timeoutMSec)
+    await sleep(config.webDriver.intervalMSec.afterLogin)
 
-        // 取引処理
-        Logger.info(data)
-        for (const transaction of data) {
-            await runTransaction(driver, urlInfo.startUrl, transaction, config.webDriver.waitMSecAfterTransaction)
-            await sleep(config.webDriver.waitMSecAfterTransaction)
-        }
-    } finally {
+    // 取引処理
+    Logger.info(data)
+    for (const transaction of data) {
+        await runTransaction(driver, urlInfo.startUrl, transaction, config.webDriver.timeoutMSec)
+        await sleep(config.webDriver.intervalMSec.afterTransaction)
+    }
+
+    if (driver) {
         // ブラウザ終了
         driver && await driver.quit()
+        await sleep(config.webDriver.intervalMSec.afterQuit)
     }
 
     // 完了通知
     notifyComplete(data.length + '件 処理完了しました。')
 
+})
+
+const checkFiles = ((config: Config): void => {
+    let fileName, filePath: string
+    if (!existsSync(config.siteInfo.urlFilePath)) {
+        fileName = 'URL情報ファイル'
+        filePath = config.siteInfo.urlFilePath
+    }
+    else if (!existsSync(config.siteInfo.loginFilePath)) {
+        fileName = 'ログイン操作情報'
+        filePath = config.siteInfo.loginFilePath
+    }
+    else if (!existsSync(config.data.filePath)) {
+        fileName = '実行データ'
+        filePath = config.data.filePath
+    } else {
+        return
+    }
+    throw new Error(fileName + ' ファイル (' + filePath + ') が存在しません。')
+});
+
+// 起動ポイント
+(async () => {
+    try {
+        Logger.init()
+        await main()
+    } catch (e) {
+        if (e instanceof Error) {
+            notifyError(e.message)
+        } else {
+            notifyError('予期しないエラーが発生しました。(' + e + ')')
+        }
+        Logger.error(e)
+    }
 })()

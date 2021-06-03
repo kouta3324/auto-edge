@@ -1,15 +1,15 @@
-const itemControls = ['input', 'click'] as const
+const itemControls = ['input', 'click', 'dialog'] as const
 type ItemControl = typeof itemControls[number]
 
-const itemStyles = ['string', 'number', 'date'] as const
+const itemStyles = ['string', 'number', 'YYYY/MM/DD', 'YYYYMMDD'] as const
 type ItemStyle = typeof itemStyles[number]
 
 /** 操作 */
 interface Operation {
     name: string,
     control: ItemControl,
-    cssSelector: string,
+    cssSelector?: string,
+    waitAfter: number,
     style?: ItemStyle,
-    timeoutMSec: number,
     value: string
 }

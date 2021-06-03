@@ -2,7 +2,13 @@
 interface Config {
     webDriver: {
         edgeOptions: string[],
-        waitMSecAfterTransaction: number,
+        timeoutMSec: number,
+        intervalMSec: {
+            afterLogin: number,
+            afterTransaction: number,
+            afterOperation: number,
+            afterQuit: number,
+        },
     },
     siteInfo: {
         urlFilePath: string,
@@ -15,8 +21,8 @@ interface Config {
             name: string,
             control: string,
             cssSelector: string,
+            waitAfter: number,
             style: string,
-            timeout: string,
             data: string,
         },
     }

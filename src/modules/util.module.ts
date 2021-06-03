@@ -30,6 +30,18 @@ export const getDateAsString = ((date: Date): string => {
 
 /**
  * Dateクラスをstringに変換
+ * @param date 日付
+ * @returns YYYYMMDD
+ */
+export const getDateAsStringNoSlash = ((date: Date): string => {
+    const padZero = ((num: number) => {
+        return (num < 10 ? '0' : '') + num
+    })
+    return date.getFullYear() + padZero(date.getMonth() + 1) + padZero(date.getDate())
+})
+
+/**
+ * Dateクラスをstringに変換
  * @param date 日付時刻
  * @returns YYYY/MM/DD HH:mm:ss
  */
@@ -81,3 +93,14 @@ export const notifyError = (async (message: string, title = 'エラー通知'): 
         appID: APP_NAME
     })
 })
+
+/**
+ * エラークラス
+ */
+export class AppError extends Error {
+    cause: Error | undefined
+    constructor(message?: string, e?: Error) {
+        super(message)
+        this.cause = e
+    }
+}

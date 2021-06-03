@@ -1,5 +1,5 @@
 import { WorkSheet, CellObject, readFile, utils } from 'xlsx'
-import { getDateAsString, notifyError } from './util.module'
+import { AppError, getDateAsString, getDateAsStringNoSlash } from './util.module'
 import { Logger } from './logger.module'
 
 /** XLSXファイルを開く */
@@ -9,16 +9,17 @@ export const getDataSheet = ((filePath: string, sheetName: string): WorkSheet =>
 })
 
 /** Excelワークシートから取引処理データを取得する */
-export const getTransactionData = ((label: Config['data']['label'], sheet: WorkSheet)
+export const getTransactionData = ((config: Config, sheet: WorkSheet)
     : Operation[][] => {
 
     // ラベルからカラム位置特定
+    const label = config.data.label
     const colIndex = {
         name: 0,
         control: 1,
         cssSelector: 2,
-        style: 3,
-        timeout: 4,
+        waitAfter: 3,
+        style: 4,
         dataStart: Number.MAX_VALUE,
         dataMax: 0,
     }
@@ -34,11 +35,11 @@ export const getTransactionData = ((label: Config['data']['label'], sheet: WorkS
         else if (cell.v === label.cssSelector) {
             colIndex.cssSelector = iCol
         }
+        else if (cell.v === label.waitAfter) {
+            colIndex.waitAfter = iCol
+        }
         else if (cell.v === label.style) {
             colIndex.style = iCol
-        }
-        else if (cell.v === label.timeout) {
-            colIndex.timeout = iCol
         }
         else if (cell.v === label.data) {
             if (iCol < colIndex.dataStart) {
@@ -54,6 +55,11 @@ export const getTransactionData = ((label: Config['data']['label'], sheet: WorkS
     const data: Operation[][] = []
     // データ列を1列ずつ処理する
     for (let iCol = colIndex.dataStart; iCol <= colIndex.dataMax; iCol++) {
+        // ラベルが「データ」の列のみ処理する
+        const label = sheet[utils.encode_cell({ c: iCol, r: 0 })]
+        if (!label) continue
+        if (label === label.data) continue
+
         const transaction: Operation[] = []
 
         // 項目ごとに1行ずつ処理する
@@ -61,27 +67,24 @@ export const getTransactionData = ((label: Config['data']['label'], sheet: WorkS
             // 項目名 (指定が無い場合は当該列処理終了)
             const name = getValueString(sheet[utils.encode_cell({ c: colIndex.name, r: iRow })])
             if (!name) break
-            // 操作
+            // 操作 (指定が無い場合は項目単位にスキップ)
             const control = getValueControl(sheet[utils.encode_cell({ c: colIndex.control, r: iRow })])
-            if (!control) {
-                const errMsg = (iRow + 1) + '行目「' + name + '」の' + label.control + 'が指定されていないか、値が不正です。'
-                notifyError(errMsg)
-                throw new Error(errMsg)
-            }
+            if (!control) continue
             // 形式
             const style = getValueStyle(sheet[utils.encode_cell({ c: colIndex.style, r: iRow })])
             if (control === 'input' && !style) {
-                const errMsg = (iRow + 1) + '行目「' + name + '」の' + label.style + 'が指定されていないか、値が不正です。'
-                notifyError(errMsg)
-                throw new Error(errMsg)
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.style + 'が指定されていないか、値が不正です。')
             }
             // 値 (指定が無い場合は項目単位にスキップ)
             let value: string | undefined
             if (style === 'number') {
                 value = getValueStringFromNumber(sheet[utils.encode_cell({ c: iCol, r: iRow })])
             }
-            else if (style === 'date') {
+            else if (style === 'YYYY/MM/DD') {
                 value = getValueStringFromDate(sheet[utils.encode_cell({ c: iCol, r: iRow })])
+            }
+            else if (style === 'YYYYMMDD') {
+                value = getValueStringFromDateNoSlash(sheet[utils.encode_cell({ c: iCol, r: iRow })])
             }
             else {
                 value = getValueString(sheet[utils.encode_cell({ c: iCol, r: iRow })])
@@ -89,21 +92,17 @@ export const getTransactionData = ((label: Config['data']['label'], sheet: WorkS
             if (!value) continue
             // CSSセレクタ
             const cssSelector = getValueString(sheet[utils.encode_cell({ c: colIndex.cssSelector, r: iRow })])
-            if (!cssSelector) {
-                const errMsg = (iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'が指定されていないか、値が不正です。'
-                notifyError(errMsg)
-                throw new Error(errMsg)
+            if (!cssSelector && control !== 'dialog') {
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'が指定されていないか、値が不正です。')
             }
-            // タイムアウト
-            const timeoutMSec = getValueNumber(sheet[utils.encode_cell({ c: colIndex.timeout, r: iRow })])
-            if (!timeoutMSec) {
-                const errMsg = (iRow + 1) + '行目「' + name + '」の' + label.timeout + 'が指定されていないか、値が不正です。'
-                notifyError(errMsg)
-                throw new Error(errMsg)
+            // 入力後待機
+            let waitAfter = getValueNumber(sheet[utils.encode_cell({ c: colIndex.waitAfter, r: iRow })])
+            if (!waitAfter) {
+                waitAfter = config.webDriver.intervalMSec.afterOperation
             }
             // 配列に追加
             transaction.push({
-                name, control, cssSelector, style, timeoutMSec, value
+                name, control, cssSelector, waitAfter, style, value
             })
         }
         // 配列に追加
@@ -116,6 +115,7 @@ const getValueControl = ((cell: CellObject): ItemControl | undefined => {
     if (!cell) return undefined
     if (cell.v === 'input') return 'input'
     if (cell.v === 'click') return 'click'
+    if (cell.v === 'dialog') return 'dialog'
     Logger.debug('操作指定区分不正')
     Logger.debug(cell)
     return undefined
@@ -124,44 +124,52 @@ const getValueStyle = ((cell: CellObject): ItemStyle | undefined => {
     if (!cell) return undefined
     if (cell.v === 'string') return 'string'
     if (cell.v === 'number') return 'number'
-    if (cell.v === 'date') return 'date'
+    if (cell.v === 'YYYY/MM/DD') return 'YYYY/MM/DD'
+    if (cell.v === 'YYYYMMDD') return 'YYYYMMDD'
+    if (cell.v === '-') return undefined
     Logger.debug('形式指定区分不正')
     Logger.debug(cell)
     return undefined
 })
 const getValueString = ((cell: CellObject): string | undefined => {
     if (!cell) return undefined
-    if (typeof cell.v !== 'string') {
-        Logger.debug('形式不正')
-        Logger.debug(cell)
-        return undefined
-    }
-    return cell.v
+    if (!cell.v) return undefined
+    if (typeof cell.v === 'string') return cell.v
+    if (typeof cell.v === 'number') return String(cell.v)
+    Logger.debug('形式不正: getValueString')
+    Logger.debug(cell)
+    return undefined
 })
 const getValueNumber = ((cell: CellObject): number | undefined => {
     if (!cell) return undefined
-    if (typeof cell.v !== 'number') {
-        Logger.debug('形式不正')
-        Logger.debug(cell)
-        return undefined
-    }
-    return cell.v
+    if (!cell.v) return undefined
+    if (typeof cell.v === 'number') return cell.v
+    Logger.debug('形式不正: getValueNumber')
+    Logger.debug(cell)
+    return undefined
 })
 const getValueStringFromNumber = ((cell: CellObject): string | undefined => {
     if (!cell) return undefined
-    if (typeof cell.v !== 'number') {
-        Logger.debug('形式不正')
-        Logger.debug(cell)
-        return undefined
-    }
-    return String(cell.v)
+    if (!cell.v) return undefined
+    if (typeof cell.v === 'number') return String(cell.v)
+    Logger.debug('形式不正: getValueStringFromNumber')
+    Logger.debug(cell)
+    return undefined
 })
 const getValueStringFromDate = ((cell: CellObject): string | undefined => {
     if (!cell) return undefined
-    if (!(cell.v instanceof Date)) {
-        Logger.debug('形式不正')
-        Logger.debug(cell)
-        return undefined
-    }
-    return getDateAsString(cell.v)
+    if (!cell.v) return undefined
+    if ((cell.v instanceof Date)) return getDateAsString(cell.v)
+    Logger.debug('形式不正: getValueStringFromDate')
+    Logger.debug(cell)
+    return undefined
+})
+
+const getValueStringFromDateNoSlash = ((cell: CellObject): string | undefined => {
+    if (!cell) return undefined
+    if (!cell.v) return undefined
+    if ((cell.v instanceof Date)) return getDateAsStringNoSlash(cell.v)
+    Logger.debug('形式不正: getValueStringFromDateNoSlash')
+    Logger.debug(cell)
+    return undefined
 })
