@@ -55,9 +55,15 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
     // データ列を1列ずつ処理する
     for (let iCol = colIndex.dataStart; iCol <= colIndex.dataMax; iCol++) {
         // ラベルが「データ」で始まる列のみ処理する
-        const labelOfColumn = sheet[utils.encode_cell({ c: iCol, r: 0 })]
-        if (!labelOfColumn || !labelOfColumn.v) continue
-        if (labelOfColumn.v.startsWith(labelOfColumn.data)) continue
+        const labelOfColumn = getLabel(sheet[utils.encode_cell({ c: iCol, r: 0 })], iCol)
+        if (!labelOfColumn) {
+            Logger.warn((iCol + 1) + '列目は「' + label.data + '」で始まるラベルが無いため、読み取りスキップします')
+            continue
+        }
+        if (!labelOfColumn.startsWith(label.data)) {
+            Logger.warn((iCol + 1) + '列目「' + labelOfColumn + '」列は「' + label.data + '」で始まっていないため、読み取りスキップします')
+            continue
+        }
 
         const transaction: Operation[] = []
         // 項目ごとに1行ずつ処理する
@@ -109,11 +115,16 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
     return data
 })
 
+const getLabel = ((cell: CellObject, iCol: number): string | undefined => {
+    if (!cell || !cell.v) return undefined
+    if (typeof cell.v === 'string') return cell.v
+    Logger.debug((iCol + 1) + '列目のラベル形式不正: getName', cell)
+    throw new AppError((iCol + 1) + '列目のラベル(1行目)の値が不正です(文字列ではない)')
+})
 const getName = ((cell: CellObject, label: Config["data"]["label"], iRow: number): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'string') return cell.v
-    Logger.debug('「' + label.name + '」形式不正: getName')
-    Logger.debug(cell)
+    Logger.debug('「' + label.name + '」形式不正: getName', cell)
     throw new AppError((iRow + 1) + '行目の「' + label.name + '」の値が不正です(文字列ではない)')
 })
 const getControl = ((cell: CellObject, label: Config["data"]["label"], name: string): ItemControl | undefined => {
@@ -121,8 +132,7 @@ const getControl = ((cell: CellObject, label: Config["data"]["label"], name: str
     if (cell.v === 'input') return 'input'
     if (cell.v === 'click') return 'click'
     if (cell.v === 'dialog') return 'dialog'
-    Logger.debug('「' + label.control + '」区分不正: getControl')
-    Logger.debug(cell)
+    Logger.debug('「' + label.control + '」区分不正: getControl', cell)
     throw new AppError('「' + name + '」の「' + label.control + '」の値が不正です(input,click,dialog以外が指定されている)')
 })
 const getStyle = ((cell: CellObject, label: Config["data"]["label"], name: string): ItemStyle | undefined => {
@@ -132,51 +142,44 @@ const getStyle = ((cell: CellObject, label: Config["data"]["label"], name: strin
     if (cell.v === 'YYYY/MM/DD') return 'YYYY/MM/DD'
     if (cell.v === 'YYYYMMDD') return 'YYYYMMDD'
     if (cell.v === '-') return undefined
-    Logger.debug('「' + label.style + '」区分不正: getStyle')
-    Logger.debug(cell)
+    Logger.debug('「' + label.style + '」区分不正: getStyle', cell)
     throw new AppError('「' + name + '」の「' + label.style + '」の値が不正です(string,number,YYYY/MM/DD/,YYYYMMDD,-以外が指定されている')
 })
 const getCssSelector = ((cell: CellObject, label: Config["data"]["label"], name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'string') return cell.v
-    Logger.debug('「' + label.cssSelector + '」形式不正: getCssSelector')
-    Logger.debug(cell)
+    Logger.debug('「' + label.cssSelector + '」形式不正: getCssSelector', cell)
     throw new AppError('「' + name + '」の「' + label.cssSelector + '」の値が不正です(文字列ではない)')
 })
 const getWaitAfter = ((cell: CellObject, label: Config["data"]["label"], name: string): number | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'number') return cell.v
-    Logger.debug('「' + label.waitAfter + '」形式不正: getWaitAfter')
-    Logger.debug(cell)
+    Logger.debug('「' + label.waitAfter + '」形式不正: getWaitAfter', cell)
     throw new AppError('「' + name + '」の「' + label.waitAfter + '」の値が不正です(数値ではない)')
 })
 const getValueStringFromString = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'string') return cell.v
     if (typeof cell.v === 'number') return String(cell.v)
-    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromString')
-    Logger.debug(cell)
+    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromString', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が文字列ではない)')
 })
 const getValueStringFromNumber = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'number') return String(cell.v)
-    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromNumber')
-    Logger.debug(cell)
+    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromNumber', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が数値ではない)')
 })
 const getValueStringFromDate = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if ((cell.v instanceof Date)) return getDateAsString(cell.v)
-    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromDate')
-    Logger.debug(cell)
+    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromDate', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が日付ではない)')
 })
 const getValueStringFromDateNoSlash = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if ((cell.v instanceof Date)) return getDateAsStringNoSlash(cell.v)
-    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromDateNoSlash')
-    Logger.debug(cell)
+    Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromDateNoSlash', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が日付ではない)')
 })
 

@@ -12,9 +12,10 @@ export class Logger {
     }
 
     /** デバッグログ出力 */
-    public static async debug(message: unknown): Promise<void> {
+    public static async debug(message: unknown, detail?: unknown): Promise<void> {
         const logger = Log4js.getLogger('debug')
         logger.debug((typeof message === 'string') ? message : JSON.stringify(message))
+        logger.debug(detail)
     }
 
     /** インフォログ出力 */
@@ -31,8 +32,10 @@ export class Logger {
 
     /** エラーログ出力 */
     public static async error(error: unknown): Promise<void> {
+        const debugLogger = Log4js.getLogger('debug')
+        debugLogger.error(error)
         const logger = Log4js.getLogger('error')
-        logger.error(error)
+        logger.error((error instanceof Error) ? error.message : error)
     }
 
 }

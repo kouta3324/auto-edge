@@ -4,7 +4,8 @@
             // "--headless",
             // "--disable-gpu",
             "--window-size=1280,1024",
-            "--inprivate"
+            "--inprivate",
+            "--log-level=OFF"
         ],
         "timeoutMSec": 15000,
         "intervalMSec": {

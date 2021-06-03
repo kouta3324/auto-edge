@@ -1,3 +1,3 @@
 @cd /d "%~dp0"
-node lib\index.js
+node lib\index.js > nul
 @pause

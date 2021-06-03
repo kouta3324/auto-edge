@@ -3,10 +3,13 @@ import { AppError, sleep } from './util.module'
 
 /** Microsoft Edge の WebDriver を取得 */
 export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDriver> => {
-    const capabilities: Capabilities = Capabilities.edge()
-    capabilities.set('ms:edgeOptions', {
-        args: edgeOptions
-    })
+    const capabilities = Capabilities.edge()
+        .set('ms:edgeOptions', {
+            args: edgeOptions
+        })
+        .setLoggingPrefs({
+            browser: 'OFF'
+        })
     // ブラウザを起動
     return await new Builder()
         .withCapabilities(capabilities)

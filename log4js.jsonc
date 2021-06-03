@@ -28,43 +28,45 @@
             "daysToKeep": 7,
             "alwaysIncludePattern": "true"
         },
-        "console": {
-            "type": "console"
+        "stdout": {
+            "type": "stdout"
+        },
+        "stderr": {
+            "type": "stderr"
         }
     },
     "categories": {
         "default": {
             "appenders": [
                 "info",
-                "console"
+                "stdout"
             ],
             "level": "INFO"
         },
         "debug": {
             "appenders": [
-                "debug",
-                "console"
+                "debug"
             ],
             "level": "DEBUG"
         },
         "info": {
             "appenders": [
                 "info",
-                "console"
+                "stdout"
             ],
             "level": "INFO"
         },
         "warn": {
             "appenders": [
                 "warn",
-                "console"
+                "stderr"
             ],
             "level": "WARN"
         },
         "error": {
             "appenders": [
                 "error",
-                "console"
+                "stderr"
             ],
             "level": "ERROR"
         }
