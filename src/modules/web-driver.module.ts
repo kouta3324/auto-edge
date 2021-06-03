@@ -53,7 +53,7 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             .wait(until.elementLocated(By.css(operation.cssSelector)), timeout)
             .click()
             .catch((e) => {
-                throw new AppError('項目「' + operation.name + '」のクリックに失敗しました。', e)
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のクリックに失敗しました。', e)
             })
     }
     // 入力操作の場合
@@ -62,19 +62,18 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
         const element = await driver
             .wait(until.elementLocated(By.css(operation.cssSelector)), timeout)
             .catch((e) => {
-                throw new AppError('項目「' + operation.name + '」の入力に失敗しました。', e)
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の入力に失敗しました。', e)
             })
         await element.clear()
             .catch((e) => {
-                throw new AppError('項目「' + operation.name + '」の入力値のクリアに失敗しました。', e)
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の入力値のクリアに失敗しました。', e)
             })
         // 「""」の場合は入力値のクリアのみ
         if (operation.value === '""') return
-
         // 入力
         await element.sendKeys(operation.value)
             .catch((e) => {
-                throw new AppError('項目「' + operation.name + '」の値の入力に失敗しました。', e)
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の値の入力に失敗しました。', e)
             })
     }
     // ダイアログ操作の場合
@@ -82,14 +81,14 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
         await driver
             .wait(until.alertIsPresent(), timeout)
             .catch((e) => {
-                throw new AppError('項目「' + operation.name + '」のダイヤログ取得に失敗しました。', e)
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイヤログ取得に失敗しました。', e)
             })
         // OK
         if (operation.value === 'OK') {
             await driver.switchTo().alert()
                 .accept()
                 .catch((e) => {
-                    throw new AppError('項目「' + operation.name + '」のOKのクリックに失敗しました。', e)
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のOKのクリックに失敗しました。', e)
                 })
         }
         // キャンセル
@@ -97,7 +96,7 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             await driver.switchTo().alert()
                 .dismiss()
                 .catch((e) => {
-                    throw new AppError('項目「' + operation.name + '」のキャンセルに失敗しました。', e)
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のキャンセルに失敗しました。', e)
                 })
         }
     }

@@ -14,18 +14,10 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
 
     // ラベルからカラム位置特定
     const label = config.data.label
-    const colIndex = {
-        name: 0,
-        control: 1,
-        cssSelector: 2,
-        waitAfter: 3,
-        style: 4,
-        dataStart: Number.MAX_VALUE,
-        dataMax: 0,
-    }
+    const colIndex: ColumnIndex = {}
     for (let iCol = 0; ; iCol++) {
         const cell = sheet[utils.encode_cell({ c: iCol, r: 0 })]
-        if (!cell) break
+        if (!cell || !cell.v) break
         if (cell.v === label.name) {
             colIndex.name = iCol
         }
@@ -41,27 +33,33 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
         else if (cell.v === label.style) {
             colIndex.style = iCol
         }
-        else if (cell.v === label.data) {
-            if (iCol < colIndex.dataStart) {
+        else if (cell.v.startsWith(label.data)) {
+            if (!colIndex.dataStart || iCol < colIndex.dataStart) {
                 colIndex.dataStart = iCol
             }
-        }
-        if (colIndex.dataMax < iCol) {
-            colIndex.dataMax = iCol
+            if (!colIndex.dataMax || colIndex.dataMax < iCol) {
+                colIndex.dataMax = iCol
+            }
         }
     }
+    // カラムの存在チェック
+    if (colIndex.name === undefined) throw new AppError('データファイルに「' + label.name + '」列が存在しません。')
+    if (colIndex.control === undefined) throw new AppError('データファイルに「' + label.control + '」列が存在しません。')
+    if (colIndex.cssSelector === undefined) throw new AppError('データファイルに「' + label.cssSelector + '」列が存在しません。')
+    if (colIndex.waitAfter === undefined) throw new AppError('データファイルに「' + label.waitAfter + '」列が存在しません。')
+    if (colIndex.style === undefined) throw new AppError('データファイルに「' + label.style + '」列が存在しません。')
+    if (colIndex.dataStart === undefined || colIndex.dataMax === undefined) throw new AppError('データファイルに「' + label.data + '」で始まる列が存在しません。')
 
     // データロード
     const data: Operation[][] = []
     // データ列を1列ずつ処理する
     for (let iCol = colIndex.dataStart; iCol <= colIndex.dataMax; iCol++) {
-        // ラベルが「データ」の列のみ処理する
+        // ラベルが「データ」で始まる列のみ処理する
         const label = sheet[utils.encode_cell({ c: iCol, r: 0 })]
-        if (!label) continue
-        if (label === label.data) continue
+        if (!label || !label.v) continue
+        if (label.v.startsWith(label.data)) continue
 
         const transaction: Operation[] = []
-
         // 項目ごとに1行ずつ処理する
         for (let iRow = 1; ; iRow++) {
             // 項目名 (指定が無い場合は当該列処理終了)
@@ -102,7 +100,7 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
             }
             // 配列に追加
             transaction.push({
-                name, control, cssSelector, waitAfter, style, value
+                label, name, control, cssSelector, waitAfter, style, value
             })
         }
         // 配列に追加
@@ -173,3 +171,13 @@ const getValueStringFromDateNoSlash = ((cell: CellObject): string | undefined =>
     Logger.debug(cell)
     return undefined
 })
+
+interface ColumnIndex {
+    name?: number,
+    control?: number,
+    cssSelector?: number,
+    waitAfter?: number,
+    style?: number,
+    dataStart?: number,
+    dataMax?: number,
+}
