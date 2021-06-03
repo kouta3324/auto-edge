@@ -4,12 +4,19 @@
             "type": "dateFile",
             "filename": "./log/debug",
             "pattern": "yyyyMMdd.log",
-            "daysToKeep": 7,
+            "daysToKeep": 3,
             "alwaysIncludePattern": "true"
         },
         "info": {
             "type": "dateFile",
             "filename": "./log/info",
+            "pattern": "yyyyMMdd.log",
+            "daysToKeep": 3,
+            "alwaysIncludePattern": "true"
+        },
+        "warn": {
+            "type": "dateFile",
+            "filename": "./log/warn",
             "pattern": "yyyyMMdd.log",
             "daysToKeep": 7,
             "alwaysIncludePattern": "true"
@@ -46,6 +53,13 @@
                 "console"
             ],
             "level": "INFO"
+        },
+        "warn": {
+            "appenders": [
+                "warn",
+                "console"
+            ],
+            "level": "WARN"
         },
         "error": {
             "appenders": [

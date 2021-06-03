@@ -23,6 +23,12 @@ export class Logger {
         logger.info((typeof message === 'string') ? message : JSON.stringify(message))
     }
 
+    /** 警告ログ出力 */
+    public static async warn(message: unknown): Promise<void> {
+        const logger = Log4js.getLogger('warn')
+        logger.warn((typeof message === 'string') ? message : JSON.stringify(message))
+    }
+
     /** エラーログ出力 */
     public static async error(error: unknown): Promise<void> {
         const logger = Log4js.getLogger('error')
