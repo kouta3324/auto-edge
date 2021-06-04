@@ -102,25 +102,24 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログ取得に失敗しました。', e)
             })
+        await sleep(operation.waitAfter)
+        const alert = await driver.switchTo().alert()
         // OK
         if (operation.value === 'OK') {
-            await driver.switchTo().alert()
-                .accept()
+            await alert.accept()
                 .catch((e) => {
                     throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログOKのクリックに失敗しました。', e)
                 })
         }
         // Cancel
-        if (operation.value === 'Cancel') {
-            await driver.switchTo().alert()
-                .dismiss()
+        else if (operation.value === 'Cancel') {
+            await alert.dismiss()
                 .catch((e) => {
                     throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログCancelのクリックに失敗しました。', e)
                 })
         }
         // 値入力+OK
         else {
-            const alert = await driver.switchTo().alert()
             await alert.sendKeys(operation.value)
                 .catch((e) => {
                     throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログの値の入力に失敗しました。', e)
