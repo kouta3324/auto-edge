@@ -1,7 +1,6 @@
 import { WorkSheet, CellObject, readFile, utils } from 'xlsx'
 import { AppError, getDateAsString, getDateAsStringNoSlash } from './util.module'
 import { Logger } from './logger.module'
-import { type } from 'os'
 
 /** XLSXファイルを開く */
 export const getDataSheet = ((filePath: string, sheetName: string): WorkSheet => {
@@ -141,8 +140,9 @@ const getControl = ((cell: CellObject, label: Config["data"]["label"], name: str
     if (cell.v === 'click') return 'click'
     if (cell.v === 'check') return 'check'
     if (cell.v === 'dialog') return 'dialog'
+    if (cell.v === 'window') return 'window'
     Logger.debug('「' + label.control + '」区分不正: getControl', cell)
-    throw new AppError('「' + name + '」の「' + label.control + '」の値が不正です(input,click,check,dialog以外が指定されている)')
+    throw new AppError('「' + name + '」の「' + label.control + '」の値が不正です(input,click,check,dialog,window以外が指定されている)')
 })
 const getStyle = ((cell: CellObject, label: Config["data"]["label"], name: string): ItemStyle | undefined => {
     if (!cell || !cell.v) return undefined

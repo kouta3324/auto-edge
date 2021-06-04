@@ -27,8 +27,9 @@ export const login = (async (driver: WebDriver, loginUrl: string, loginTransacti
             throw new AppError('ログインページへのアクセスに失敗しました。', e)
         })
     // ログイン処理データにしたがってオペレーションする
+    const windows: string[] = []
     for (const operation of loginTransaction) {
-        await doOperation(driver, operation, timeout)
+        await doOperation(driver, operation, timeout, windows)
         await sleep(operation.waitAfter)
     }
 })
@@ -42,13 +43,14 @@ export const runTransaction = (async (driver: WebDriver, startUrl: string, trans
             throw new AppError('スタートページへのアクセスに失敗しました。', e)
         })
     // 取引処理データにしたがってオペレーション
+    const windows: string[] = []
     for (const operation of transaction) {
-        await doOperation(driver, operation, timeout)
+        await doOperation(driver, operation, timeout, windows)
         await sleep(operation.waitAfter)
     }
 })
 
-const doOperation = (async (driver: WebDriver, operation: Operation, timeout: number) => {
+const doOperation = (async (driver: WebDriver, operation: Operation, timeout: number, windows: string[]) => {
     // クリック操作の場合
     if (operation.control === 'click' && operation.cssSelector) {
         await driver
@@ -132,5 +134,26 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
                     throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログOKのクリックに失敗しました。', e)
                 })
         }
+    }
+    // ウィンドウ切り替えの場合
+    else if (operation.control === 'window') {
+        // 指定番号取得
+        if (!operation.cssSelector) return
+        const index = Number(operation.cssSelector.split('>')[1])
+        // ウィンドウが開くまで待つ
+        await driver.wait(
+            async () => (await driver.getAllWindowHandles()).length >= (index + 1), timeout)
+        // ウィンドウハンドルを配列に追加
+        const allWindows = await driver.getAllWindowHandles()
+        allWindows.forEach(async window => {
+            if (!windows.includes(window)) {
+                windows.push(window)
+            }
+        })
+        // 指定番号のウィンドウへ移動
+        await driver.switchTo().window(windows[index])
+            .catch((e) => {
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」での別ウィンドウ移動に失敗しました。', e)
+            })
     }
 })
