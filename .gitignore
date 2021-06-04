@@ -1,6 +1,7 @@
 /node_modules/
-/log/*
-/data/*
+/lib/*
 /dist/*
+/data/*
+/log/*
 /msedgedriver.exe
 /node.exe
