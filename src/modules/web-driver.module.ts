@@ -88,7 +88,8 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のチェックに失敗しました。', e)
             })
-        if ((!element.isSelected() && operation.value === '○') || (element.isSelected() && operation.value === '×')) {
+        const isSelected = await element.isSelected()
+        if ((!isSelected && operation.value === '○') || (isSelected && operation.value === '×')) {
             await element.click()
                 .catch((e) => {
                     throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のチェックに失敗しました。', e)
