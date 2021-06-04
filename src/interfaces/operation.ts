@@ -1,4 +1,4 @@
-const itemControls = ['input', 'click', 'dialog'] as const
+const itemControls = ['input', 'click', 'check', 'dialog'] as const
 type ItemControl = typeof itemControls[number]
 
 const itemStyles = ['string', 'number', 'YYYY/MM/DD', 'YYYYMMDD'] as const

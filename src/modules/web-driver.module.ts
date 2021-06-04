@@ -1,4 +1,4 @@
-import { WebDriver, Builder, By, Capabilities, until } from 'selenium-webdriver'
+import { WebDriver, Builder, By, Capabilities, until, Key } from 'selenium-webdriver'
 import { AppError, sleep } from './util.module'
 
 /** Microsoft Edge の WebDriver を取得 */
@@ -75,28 +75,59 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の値の入力に失敗しました。', e)
             })
+        // 入力値確定(TAB入力)
+        await element.sendKeys(Key.TAB)
+            .catch((e) => {
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の値の入力値確定に失敗しました。', e)
+            })
+    }
+    // チェック操作の場合
+    if (operation.control === 'check' && operation.cssSelector) {
+        const element = await driver
+            .wait(until.elementLocated(By.css(operation.cssSelector)), timeout)
+            .catch((e) => {
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のチェックに失敗しました。', e)
+            })
+        if ((!element.isSelected() && operation.value === '○') || (element.isSelected() && operation.value === '×')) {
+            await element.click()
+                .catch((e) => {
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のチェックに失敗しました。', e)
+                })
+        }
     }
     // ダイアログ操作の場合
     else if (operation.control === 'dialog') {
         await driver
             .wait(until.alertIsPresent(), timeout)
             .catch((e) => {
-                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイヤログ取得に失敗しました。', e)
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログ取得に失敗しました。', e)
             })
         // OK
         if (operation.value === 'OK') {
             await driver.switchTo().alert()
                 .accept()
                 .catch((e) => {
-                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のOKのクリックに失敗しました。', e)
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログOKのクリックに失敗しました。', e)
                 })
         }
-        // キャンセル
-        else {
+        // Cancel
+        if (operation.value === 'Cancel') {
             await driver.switchTo().alert()
                 .dismiss()
                 .catch((e) => {
-                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のキャンセルに失敗しました。', e)
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログCancelのクリックに失敗しました。', e)
+                })
+        }
+        // 値入力+OK
+        else {
+            const alert = await driver.switchTo().alert()
+            await alert.sendKeys(operation.value)
+                .catch((e) => {
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログの値の入力に失敗しました。', e)
+                })
+            await alert.accept()
+                .catch((e) => {
+                    throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のダイアログOKのクリックに失敗しました。', e)
                 })
         }
     }

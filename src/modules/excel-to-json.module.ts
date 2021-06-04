@@ -1,6 +1,7 @@
 import { WorkSheet, CellObject, readFile, utils } from 'xlsx'
 import { AppError, getDateAsString, getDateAsStringNoSlash } from './util.module'
 import { Logger } from './logger.module'
+import { type } from 'os'
 
 /** XLSXファイルを開く */
 export const getDataSheet = ((filePath: string, sheetName: string): WorkSheet => {
@@ -94,6 +95,13 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
                 value = getValueStringFromString(sheet[utils.encode_cell({ c: iCol, r: iRow })], labelOfColumn, name)
             }
             if (!value) continue
+            // 値チェック
+            if (control === 'click' && value !== '○') {
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.data + 'の値が不正です。(clickの場合、○またはスペースのみ許容)')
+            }
+            else if (control === 'check' && value !== '○' && value !== '×') {
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.data + 'の値が不正です。(checkの場合、○、×またはスペースのみ許容)')
+            }
             // CSSセレクタ
             const cssSelector = getCssSelector(sheet[utils.encode_cell({ c: colIndex.cssSelector, r: iRow })], label, name)
             if (!cssSelector && control !== 'dialog') {
@@ -131,9 +139,10 @@ const getControl = ((cell: CellObject, label: Config["data"]["label"], name: str
     if (!cell || !cell.v) return undefined
     if (cell.v === 'input') return 'input'
     if (cell.v === 'click') return 'click'
+    if (cell.v === 'check') return 'check'
     if (cell.v === 'dialog') return 'dialog'
     Logger.debug('「' + label.control + '」区分不正: getControl', cell)
-    throw new AppError('「' + name + '」の「' + label.control + '」の値が不正です(input,click,dialog以外が指定されている)')
+    throw new AppError('「' + name + '」の「' + label.control + '」の値が不正です(input,click,check,dialog以外が指定されている)')
 })
 const getStyle = ((cell: CellObject, label: Config["data"]["label"], name: string): ItemStyle | undefined => {
     if (!cell || !cell.v) return undefined
@@ -167,18 +176,21 @@ const getValueStringFromString = ((cell: CellObject, labelOfColumn: string, name
 const getValueStringFromNumber = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'number') return String(cell.v)
+    if (typeof cell.v === 'string' && cell.v === '""') return cell.v
     Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromNumber', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が数値ではない)')
 })
 const getValueStringFromDate = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if ((cell.v instanceof Date)) return getDateAsString(cell.v)
+    if (typeof cell.v === 'string' && cell.v === '""') return cell.v
     Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromDate', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が日付ではない)')
 })
 const getValueStringFromDateNoSlash = ((cell: CellObject, labelOfColumn: string, name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
     if ((cell.v instanceof Date)) return getDateAsStringNoSlash(cell.v)
+    if (typeof cell.v === 'string' && cell.v === '""') return cell.v
     Logger.debug('「' + labelOfColumn + '」列「' + name + '」形式不正: getValueStringFromDateNoSlash', cell)
     throw new AppError('「' + labelOfColumn + '」列の「' + name + '」の値が不正です(値が日付ではない)')
 })
