@@ -19,6 +19,8 @@ export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDrive
 /** ログイン処理 (初回のみ処理) */
 export const login = (async (driver: WebDriver, loginUrl: string, loginTransaction: Operation[], timeout: number)
     : Promise<void> => {
+    // ログイン処理が無ければスキップ
+    if (!loginTransaction || loginTransaction.length === 0) return
     // ログインURLを開く
     await driver.get(loginUrl)
         .catch((e) => {
