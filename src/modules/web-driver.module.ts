@@ -79,7 +79,8 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の値の入力に失敗しました。', e)
             })
-        // 入力値確定(TAB入力)
+        // 入力値確定(TAB入力) ファイルの場合除く
+        if (operation.style === 'file') return
         await element.sendKeys(Key.TAB)
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の値の入力値確定に失敗しました。', e)

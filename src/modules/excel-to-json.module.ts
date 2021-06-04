@@ -150,9 +150,10 @@ const getStyle = ((cell: CellObject, label: Config["data"]["label"], name: strin
     if (cell.v === 'number') return 'number'
     if (cell.v === 'YYYY/MM/DD') return 'YYYY/MM/DD'
     if (cell.v === 'YYYYMMDD') return 'YYYYMMDD'
+    if (cell.v === 'file') return 'file'
     if (cell.v === '-') return undefined
     Logger.debug('「' + label.style + '」区分不正: getStyle', cell)
-    throw new AppError('「' + name + '」の「' + label.style + '」の値が不正です(string,number,YYYY/MM/DD/,YYYYMMDD,-以外が指定されている')
+    throw new AppError('「' + name + '」の「' + label.style + '」の値が不正です(string,number,YYYY/MM/DD/,YYYYMMDD,file以外が指定されている')
 })
 const getCssSelector = ((cell: CellObject, label: Config["data"]["label"], name: string): string | undefined => {
     if (!cell || !cell.v) return undefined
