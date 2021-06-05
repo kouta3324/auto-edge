@@ -125,12 +125,14 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
 const getLabel = ((cell: CellObject, iCol: number): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'string') return cell.v
+    if (typeof cell.v === 'number') return String(cell.v)
     Logger.debug((iCol + 1) + '列目のラベル形式不正: getLabel', cell)
     throw new AppError((iCol + 1) + '列目のラベル(1行目)の値が不正です(文字列ではない)')
 })
 const getName = ((cell: CellObject, label: Config["data"]["label"], iRow: number): string | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'string') return cell.v
+    if (typeof cell.v === 'number') return String(cell.v)
     Logger.debug('「' + label.name + '」形式不正: getName', cell)
     throw new AppError((iRow + 1) + '行目の「' + label.name + '」の値が不正です(文字列ではない)')
 })
