@@ -1,33 +1,37 @@
 {
     "webDriver": {
         "edgeOptions": [
-            // "--headless",
-            // "--disable-gpu",
-            "--window-size=1280,1024",
-            "--inprivate"
+            // "--headless", /* ブラウザを画面表示しない場合に指定 */
+            // "--disable-gpu", /* ブラウザを画面表示しない場合に指定 */
+            "--window-size=1280,1024", /* ブラウザのウィンドウサイズ */
+            "--inprivate" /* プライベートモード (既存セッションに影響されないため指定推奨) */
         ],
-        "timeoutMSec": 15000,
-        "intervalMSec": {
-            "afterLogin": 2000,
-            "afterTransaction": 2000,
-            "afterOperation": 100,
-            "afterQuit": 3000
+        "timeoutMSec": 120000, /* 処理対象エレメント出現待ちタイムアウト時間 (ミリ秒) */
+        /* 処理対象のエレメント (画面部品) が存在しない場合に、出現するのを待つ最大の時間。 */
+        /* この時間を超過するとエラーとなる。逆に、画面遷移途中で業務エラーとなった場合にも */
+        /* このタイムアウト時間以内に手で対処すれば処理を続行出来るため、長めに設定すると良い。 */
+        "intervalMSec": { /* 全てミリ秒 */
+            /* これらは必ず発生する待ち時間となるため、マシン速度に合わせて適宜調整する */
+            "afterLogin": 2000, /* ログイン処理から本処理の間の待機時間 */
+            "afterTransaction": 2000, /* 各取引 (データファイルの1列) 間の待機時間 */
+            "afterOperation": 100, /* 各操作間の待機時間 */
+            "afterQuit": 3000 /* 全処理終了後、ブラウザ終了処理待ちの待機時間 */
         }
     },
     "siteInfo": {
-        "urlFilePath": "./data/url-info.jsonc",
-        "loginFilePath": "./data/login.jsonc"
+        "urlFilePath": "./data/url-info.jsonc", /* URL情報ファイルパス */
+        "loginFilePath": "./data/login.jsonc" /* ログイン情報ファイルパス */
     },
     "data": {
-        "filePath": "./data/data.xlsx",
-        "sheetName": "DataSheet",
-        "label": {
-            "name": "項目名",
-            "control": "操作",
-            "cssSelector": "CSSセレクタ",
-            "waitAfter": "入力後待機",
-            "style": "形式",
-            "data": "データ"
+        "filePath": "./data/data.xlsx", /* データファイル (Excel) のファイルパス */
+        "sheetName": "DataSheet", /* データファイル (Excel) の処理対象シート名 */
+        "label": { /* データファイル (Excel) の1行目の列ラベル名 */
+            "name": "項目名", /* 1行目の列ラベルがこの文字列と完全一致する列を検索する */
+            "control": "操作", /* 1行目の列ラベルがこの文字列と完全一致する列を検索する */
+            "cssSelector": "CSSセレクタ", /* 1行目の列ラベルがこの文字列と完全一致する列を検索する */
+            "waitAfter": "入力後待機", /* 1行目の列ラベルがこの文字列と完全一致する列を検索する */
+            "style": "形式", /* 1行目の列ラベルがこの文字列と完全一致する列を検索する */
+            "data": "データ" /* 1行目の列ラベルがこの文字列*で始まる*列を処理対象とする */
         }
     }
 }
