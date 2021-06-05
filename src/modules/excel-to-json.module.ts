@@ -106,7 +106,7 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
             if (!cssSelector && control !== 'dialog') {
                 throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'が指定されていないか、値が不正です。')
             }
-            if (control === 'window' && cssSelector && (!cssSelector.includes('>') || !Number.isInteger(cssSelector.split('>')[1]))) {
+            if (control === 'window' && cssSelector && (!cssSelector.includes('>') || !(cssSelector.split('>')[1]).match(/^[0-9]+$/g))) {
                 throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'の値が不正です。(windowの場合「>n」形式で記述)')
             }
             // 入力後待機
