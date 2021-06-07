@@ -1,12 +1,25 @@
 import { WebDriver, Builder, By, Capabilities, until, Key } from 'selenium-webdriver'
 import { AppError, sleep } from './util.module'
 
-/** Microsoft Edge の WebDriver を取得 */
-export const getEdgeWebDriver = (async (edgeOptions: string[]): Promise<WebDriver> => {
-    const capabilities = Capabilities.edge()
-        .set('ms:edgeOptions', {
-            args: edgeOptions
-        })
+/** WebDriver を取得 */
+export const getWebDriver = (async (webDriverConfig: Config["webDriver"]): Promise<WebDriver> => {
+    let capabilities = undefined
+    if (webDriverConfig.browser === 'chrome') {
+        capabilities = Capabilities.chrome()
+            .set('chromeOptions', { args: webDriverConfig.chromeOptions })
+    }
+    else if (webDriverConfig.browser === 'edge') {
+        capabilities = Capabilities.edge()
+            .set('ms:edgeOptions', { args: webDriverConfig.edgeOptions })
+    }
+    else if (webDriverConfig.browser === 'ie') {
+        capabilities = Capabilities.ie()
+            .set('se:ieOptions', webDriverConfig.ieOptions)
+    }
+    // ブラウザ種類不正
+    if (!capabilities) {
+        throw new AppError('ブラウザ定義に誤りがあります。(chrome,edge,ieのいずれかを指定)')
+    }
     // ブラウザを起動
     return await new Builder()
         .withCapabilities(capabilities)

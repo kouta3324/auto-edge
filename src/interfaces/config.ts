@@ -1,7 +1,15 @@
+const browsers = ['chrome', 'edge', 'ie'] as const
+type Browsers = typeof browsers[number]
+
 /** 動作設定 */
 interface Config {
     webDriver: {
+        browser: Browsers,
+        chromeOptions: string[],
         edgeOptions: string[],
+        ieOptions: {
+            [key: string]: unknown
+        }
         timeoutMSec: number,
         intervalMSec: {
             afterLogin: number,

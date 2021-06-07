@@ -1,11 +1,10 @@
 import { parse } from 'jsonc-parser'
 import { existsSync, readFileSync } from 'fs'
-import { WebDriver } from 'selenium-webdriver'
 
 import { Logger } from './modules/logger.module'
 import { notifyComplete, notifyError, sleep } from './modules/util.module'
 import { getTransactionData, getDataSheet } from './modules/excel-to-json.module'
-import { getEdgeWebDriver, login, runTransaction } from './modules/web-driver.module'
+import { getWebDriver, login, runTransaction } from './modules/web-driver.module'
 
 const main = (async () => {
 
@@ -24,7 +23,7 @@ const main = (async () => {
     const data = getTransactionData(config, sheet)
 
     // ブラウザ起動
-    const driver: WebDriver = await getEdgeWebDriver(config.webDriver.edgeOptions)
+    const driver = await getWebDriver(config.webDriver)
 
     // ログイン処理
     Logger.info(loginTransaction)

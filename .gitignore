@@ -4,4 +4,6 @@
 /data/
 /log/
 /msedgedriver.exe
+/chromedriver.exe
+/IEDriverServer.exe
 /node.exe
