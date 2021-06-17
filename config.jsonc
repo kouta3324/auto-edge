@@ -1,6 +1,6 @@
 {
     "webDriver": {
-        "browser": "edge",
+        "browser": "ie",
         "chromeOptions": [
             // "headless", /* ブラウザを画面表示しない場合に指定 */
             // "disable-gpu", /* ブラウザを画面表示しない場合に指定 */
@@ -13,11 +13,18 @@
             "--inprivate" /* プライベートモード (既存セッションに影響されないため指定推奨) */
         ],
         "ieOptions": {
+            /* IE mode on Edge の場合 */
+            // "ie.edgechromium": true,
+            // "ie.edgepath": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+            /* IE mode の場合、ウィンドウ切り替えに失敗する(SeleniumDriver側の対応待ち) */
+            "nativeEvents": false, /* click()イベントを有効化 */
+            "ignoreProtectedModeSettings": true, /* 保護モード設定を無視する */
+            "disable-popup-blocking": true, /* ポップアップブロックを無効化 */
             "enablePersistentHover": true, /* マウスホバー中に信号を送るかどうか */
             "requireWindowFocus": true, /* 画面操作時にウィンドウフォーカルをするかどうか */
             "ignoreZoomSetting": true /* 拡大率設定を無視するかどうか */
         },
-        "timeoutMSec": 120000, /* 処理対象エレメント出現待ちタイムアウト時間 (ミリ秒) */
+        "timeoutMSec": 1200000, /* 処理対象エレメント出現待ちタイムアウト時間 (ミリ秒) */
         /* 処理対象のエレメント (画面部品) が存在しない場合に、出現するのを待つ最大の時間。 */
         /* この時間を超過するとエラーとなる。逆に、画面遷移途中で業務エラーとなった場合にも */
         /* このタイムアウト時間以内に手で対処すれば処理を続行出来るため、長めに設定すると良い。 */

@@ -157,8 +157,14 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
         // ウィンドウが開くまで待つ
         await driver.wait(
             async () => (await driver.getAllWindowHandles()).length >= (index + 1), timeout)
+            .catch((e) => {
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」での別ウィンドウを検知出来ませんでした。', e)
+            })
         // ウィンドウハンドルを配列に追加
         const allWindows = await driver.getAllWindowHandles()
+            .catch((e) => {
+                throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」でのウィンドウリスト取得に失敗しました。', e)
+            })
         allWindows.forEach(async window => {
             if (!windows.includes(window)) {
                 windows.push(window)

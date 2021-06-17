@@ -9,6 +9,9 @@ import { getWebDriver, login, runTransaction } from './modules/web-driver.module
 const main = (async () => {
 
     // 基本定義ロード
+    if (!existsSync('./config.jsonc')) {
+        throw new Error('基本定義' + ' ファイル (' + './config.jsonc' + ') が存在しません。')
+    }
     const config: Config = parse(readFileSync('./config.jsonc').toString())
 
     // ファイルチェック
