@@ -29,6 +29,7 @@ interface Config {
             name: string,
             control: string,
             cssSelector: string,
+            xPath: string,
             waitAfter: number,
             style: string,
             data: string,

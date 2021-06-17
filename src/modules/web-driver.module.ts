@@ -65,19 +65,19 @@ export const runTransaction = (async (driver: WebDriver, startUrl: string, trans
 
 const doOperation = (async (driver: WebDriver, operation: Operation, timeout: number, windows: string[]) => {
     // クリック操作の場合
-    if (operation.control === 'click' && operation.cssSelector) {
+    if (operation.control === 'click' && (operation.cssSelector || operation.xPath)) {
         await driver
-            .wait(until.elementLocated(By.css(operation.cssSelector)), timeout)
+            .wait(until.elementLocated(getBy(operation.cssSelector, operation.xPath)), timeout)
             .click()
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のクリックに失敗しました。', e)
             })
     }
     // 入力操作の場合
-    else if (operation.control === 'input' && operation.cssSelector) {
+    else if (operation.control === 'input' && (operation.cssSelector || operation.xPath)) {
         // 入力値のクリア
         const element = await driver
-            .wait(until.elementLocated(By.css(operation.cssSelector)), timeout)
+            .wait(until.elementLocated(getBy(operation.cssSelector, operation.xPath)), timeout)
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」の入力に失敗しました。', e)
             })
@@ -100,9 +100,9 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
             })
     }
     // チェック操作の場合
-    if (operation.control === 'check' && operation.cssSelector) {
+    if (operation.control === 'check' && (operation.cssSelector || operation.xPath)) {
         const element = await driver
-            .wait(until.elementLocated(By.css(operation.cssSelector)), timeout)
+            .wait(until.elementLocated(getBy(operation.cssSelector, operation.xPath)), timeout)
             .catch((e) => {
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」のチェックに失敗しました。', e)
             })
@@ -176,4 +176,10 @@ const doOperation = (async (driver: WebDriver, operation: Operation, timeout: nu
                 throw new AppError('「' + operation.label + '」列の項目「' + operation.name + '」での別ウィンドウ移動に失敗しました。', e)
             })
     }
+})
+
+const getBy = ((cssSelector: string | undefined, xPath: string | undefined): By => {
+    if (cssSelector) return By.css(cssSelector)
+    if (xPath) return By.xpath(xPath)
+    throw new AppError('Both CSS Selector and XPath are undefined. This is an application bug.')
 })

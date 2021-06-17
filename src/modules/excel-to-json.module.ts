@@ -27,6 +27,9 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
         else if (cell.v === label.cssSelector) {
             colIndex.cssSelector = iCol
         }
+        else if (cell.v === label.xPath) {
+            colIndex.xPath = iCol
+        }
         else if (cell.v === label.waitAfter) {
             colIndex.waitAfter = iCol
         }
@@ -45,7 +48,7 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
     // カラムの存在チェック
     if (colIndex.name === undefined) throw new AppError('データファイルに「' + label.name + '」列が存在しません。')
     if (colIndex.control === undefined) throw new AppError('データファイルに「' + label.control + '」列が存在しません。')
-    if (colIndex.cssSelector === undefined) throw new AppError('データファイルに「' + label.cssSelector + '」列が存在しません。')
+    if (colIndex.cssSelector === undefined && colIndex.xPath === undefined) throw new AppError('データファイルに「' + label.cssSelector + '」列または「' + label.xPath + '」列が存在しません。')
     if (colIndex.waitAfter === undefined) throw new AppError('データファイルに「' + label.waitAfter + '」列が存在しません。')
     if (colIndex.style === undefined) throw new AppError('データファイルに「' + label.style + '」列が存在しません。')
     if (colIndex.dataStart === undefined || colIndex.dataMax === undefined) throw new AppError('データファイルに「' + label.data + '」で始まる列が存在しません。')
@@ -102,12 +105,37 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
                 throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.data + 'の値が不正です。(checkの場合、○、×またはスペースのみ許容)')
             }
             // CSSセレクタ
-            const cssSelector = getCssSelector(sheet[utils.encode_cell({ c: colIndex.cssSelector, r: iRow })], label, name)
-            if (!cssSelector && control !== 'dialog') {
-                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'が指定されていないか、値が不正です。')
+            let cssSelector
+            if (colIndex.cssSelector !== undefined) {
+                cssSelector = getCssSelector(sheet[utils.encode_cell({ c: colIndex.cssSelector, r: iRow })], label, name)
             }
-            if (control === 'window' && cssSelector && (!cssSelector.includes('>') || !(cssSelector.split('>')[1]).match(/^[0-9]+$/g))) {
+            // XPath
+            let xPath
+            if (colIndex.xPath !== undefined) {
+                xPath = getXPath(sheet[utils.encode_cell({ c: colIndex.xPath, r: iRow })], label, name)
+            }
+            // 両方指定はNG
+            if (cssSelector && xPath) {
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'と' + label.xPath + 'は同時に指定出来ません。')
+            }
+            // CSSセレクタまたはXPathチェック
+            if (!cssSelector && !xPath && control !== 'dialog') {
+                let errorLabel
+                if (colIndex.cssSelector !== undefined && colIndex.xPath !== undefined) {
+                    errorLabel = label.cssSelector + 'または' + label.xPath
+                } else if (colIndex.cssSelector !== undefined) {
+                    errorLabel = label.cssSelector
+                } else {
+                    errorLabel = label.xPath
+                }
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + errorLabel + 'が指定されていないか、値が不正です。')
+            }
+            // Window切り替えの場合の指定形式チェック
+            if (cssSelector && control === 'window' && cssSelector && (!cssSelector.includes('>') || !(cssSelector.split('>')[1]).match(/^[0-9]+$/g))) {
                 throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.cssSelector + 'の値が不正です。(windowの場合「>n」形式で記述)')
+            }
+            if (xPath && control === 'window' && xPath && (!xPath.includes('>') || !(xPath.split('>')[1]).match(/^[0-9]+$/g))) {
+                throw new AppError((iRow + 1) + '行目「' + name + '」の' + label.xPath + 'の値が不正です。(windowの場合「>n」形式で記述)')
             }
             // 入力後待機
             let waitAfter = getWaitAfter(sheet[utils.encode_cell({ c: colIndex.waitAfter, r: iRow })], label, name)
@@ -116,7 +144,7 @@ export const getTransactionData = ((config: Config, sheet: WorkSheet)
             }
             // 配列に追加
             transaction.push({
-                label: labelOfColumn, name, control, cssSelector, waitAfter, style, value
+                label: labelOfColumn, name, control, cssSelector, xPath, waitAfter, style, value
             })
         }
         // 配列に追加
@@ -166,6 +194,12 @@ const getCssSelector = ((cell: CellObject, label: Config["data"]["label"], name:
     Logger.debug('「' + label.cssSelector + '」形式不正: getCssSelector', cell)
     throw new AppError('「' + name + '」の「' + label.cssSelector + '」の値が不正です(文字列ではない)')
 })
+const getXPath = ((cell: CellObject, label: Config["data"]["label"], name: string): string | undefined => {
+    if (!cell || !cell.v) return undefined
+    if (typeof cell.v === 'string') return cell.v
+    Logger.debug('「' + label.xPath + '」形式不正: getXPath', cell)
+    throw new AppError('「' + name + '」の「' + label.xPath + '」の値が不正です(文字列ではない)')
+})
 const getWaitAfter = ((cell: CellObject, label: Config["data"]["label"], name: string): number | undefined => {
     if (!cell || !cell.v) return undefined
     if (typeof cell.v === 'number') return cell.v
@@ -205,6 +239,7 @@ interface ColumnIndex {
     name?: number,
     control?: number,
     cssSelector?: number,
+    xPath?: number,
     waitAfter?: number,
     style?: number,
     dataStart?: number,

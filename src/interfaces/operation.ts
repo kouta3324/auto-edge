@@ -10,6 +10,7 @@ interface Operation {
     name: string,
     control: ItemControl,
     cssSelector?: string,
+    xPath?: string,
     waitAfter: number,
     style?: ItemStyle,
     value: string
